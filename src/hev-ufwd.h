@@ -2,7 +2,7 @@
  ============================================================================
  Name        : hev-ufwd.h
  Author      : hev <r@hev.cc>
- Copyright   : Copyright (c) 2022 xyz
+ Copyright   : Copyright (c) 2022 - 2025 xyz
  Description : UDP forwarder
  ============================================================================
  */
@@ -12,11 +12,11 @@
 
 /**
  * hev_ufwd_run:
- * @fd: socket file descriptor
+ * @saddr: source addr
  *
  * Run server for UDP port forwarding.
  */
-void hev_ufwd_run (int fd);
+void hev_ufwd_run (struct sockaddr *saddr);
 
 /**
  * hev_ufwd_kill:

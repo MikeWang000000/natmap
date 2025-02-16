@@ -2,7 +2,7 @@
  ============================================================================
  Name        : hev-unsk.c
  Author      : hev <r@hev.cc>
- Copyright   : Copyright (c) 2022 xyz
+ Copyright   : Copyright (c) 2022 - 2025 xyz
  Description : UDP NAT session keeper
  ============================================================================
  */
@@ -23,39 +23,19 @@
 
 #include "hev-unsk.h"
 
+static struct sockaddr_storage saddr;
 static HevTask *task;
 static int timeout;
-static int fd;
 
 static void
-unsk_close (void)
-{
-    if (fd < 0) {
-        return;
-    }
-
-    close (fd);
-    fd = -1;
-}
-
-static void
-stun_ready_handler (void)
-{
-    unsk_close ();
-}
-
-static void
-stun_done_handler (void)
+stun_handler (void)
 {
     const char *ufwd = hev_conf_taddr ();
 
     if (ufwd) {
-        hev_ufwd_run (fd);
+        hev_ufwd_run ((struct sockaddr *)&saddr);
     }
 }
-
-static HevStunHandlerGroup handlers = { &stun_ready_handler,
-                                        &stun_done_handler };
 
 static void
 unsk_run (void)
@@ -63,37 +43,43 @@ unsk_run (void)
     const char *ufwd;
     const char *addr;
     const char *port;
+    const char *stun;
+    const char *sport;
     const char *iface;
     unsigned int mark;
     int type;
+    int fd;
 
     type = hev_conf_type ();
     ufwd = hev_conf_taddr ();
     addr = hev_conf_baddr ();
     port = hev_conf_bport ();
+    stun = hev_conf_stun ();
+    sport = hev_conf_sport ();
     iface = hev_conf_iface ();
     mark = hev_conf_mark ();
     timeout = hev_conf_keep ();
 
-    fd = hev_sock_client_udp (type, addr, port, iface, mark);
+    fd = hev_sock_client_udp (type, addr, port, stun, sport, iface, mark,
+                              &saddr);
     if (fd < 0) {
         LOGV (E, "%s", "Start UDP keep-alive service failed.");
         return;
     }
+    close (fd);
 
-    hev_stun_run (fd, &handlers);
+    hev_stun_run ((struct sockaddr *)&saddr, stun_handler);
 
     do {
         if (hev_task_sleep (timeout) > 0) {
             break;
         }
-        hev_stun_run (-1, &handlers);
+        hev_stun_run (NULL, stun_handler);
     } while (timeout);
 
     if (ufwd) {
         hev_ufwd_kill ();
     }
-    unsk_close ();
 }
 
 static void

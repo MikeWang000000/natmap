@@ -2,7 +2,7 @@
  ============================================================================
  Name        : hev-sock.h
  Author      : hev <r@hev.cc>
- Copyright   : Copyright (c) 2022 xyz
+ Copyright   : Copyright (c) 2022 - 2025 xyz
  Description : Sock
  ============================================================================
  */
@@ -19,6 +19,7 @@
  * @dport: destination port
  * @iface: network interface
  * @mark: fwmark
+ * @baddr: [out] socket bind addr
  *
  * Create a socket for TCP client.
  *
@@ -26,26 +27,32 @@
  */
 int hev_sock_client_tcp (int family, const char *saddr, const char *sport,
                          const char *daddr, const char *dport,
-                         const char *iface, unsigned int mark);
+                         const char *iface, unsigned int mark,
+                         struct sockaddr_storage *baddr);
 
 /**
  * hev_sock_client_udp:
  * @family: network family
  * @saddr: source addr
  * @sport: source port
+ * @daddr: destination addr
+ * @dport: destination port
  * @iface: network interface
  * @mark: fwmark
+ * @baddr: [out] socket bind addr
  *
  * Create a socket for UDP client.
  *
  * Returns: returns file descriptor on successful, otherwise returns -1.
  */
 int hev_sock_client_udp (int family, const char *saddr, const char *sport,
-                         const char *iface, unsigned int mark);
+                         const char *daddr, const char *dport,
+                         const char *iface, unsigned int mark,
+                         struct sockaddr_storage *baddr);
 
 /**
  * hev_sock_client_stun:
- * @fd: http socket file descriptor
+ * @saddr: source addr
  * @type: socket type
  * @daddr: destination addr
  * @dport: destination port
@@ -58,7 +65,7 @@ int hev_sock_client_udp (int family, const char *saddr, const char *sport,
  *
  * Returns: returns file descriptor on successful, otherwise returns -1.
  */
-int hev_sock_client_stun (int fd, int type, const char *daddr,
+int hev_sock_client_stun (struct sockaddr *saddr, int type, const char *daddr,
                           const char *dport, const char *iface,
                           unsigned int mark, unsigned int baddr[4], int *bport);
 
@@ -76,7 +83,7 @@ int hev_sock_client_pfwd (int type, const char *addr, const char *port);
 
 /**
  * hev_sock_server_pfwd:
- * @fd: http socket file descriptor
+ * @saddr: source addr
  * @type: socket type
  * @iface: network interface
  * @mark: fwmark
@@ -85,7 +92,7 @@ int hev_sock_client_pfwd (int type, const char *addr, const char *port);
  *
  * Returns: returns file descriptor on successful, otherwise returns -1.
  */
-int hev_sock_server_pfwd (int fd, int type, const char *iface,
+int hev_sock_server_pfwd (struct sockaddr *saddr, int type, const char *iface,
                           unsigned int mark);
 
 #endif /* __HEV_SOCK_H__ */
